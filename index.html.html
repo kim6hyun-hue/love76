@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>비밀의 보물 상자</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #1a1c29, #283048);
+        color: #ffffff;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .container {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        max-width: 400px;
+        width: 100%;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+        letter-spacing: 1px;
+      }
+
+      .input-group {
+        margin-bottom: 30px;
+      }
+
+      input[type="password"] {
+        width: 80%;
+        padding: 12px 20px;
+        font-size: 16px;
+        border: 2px solid #4a5568;
+        border-radius: 8px;
+        background: #1a202c;
+        color: #fff;
+        outline: none;
+        transition: border-color 0.3s;
+        text-align: center;
+        letter-spacing: 2px;
+      }
+
+      input[type="password"]:focus {
+        border-color: #6366f1;
+      }
+
+      button {
+        margin-top: 15px;
+        padding: 12px 30px;
+        font-size: 16px;
+        background: #6366f1;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        transition:
+          background 0.3s,
+          transform 0.1s;
+      }
+
+      button:hover {
+        background: #4f46e5;
+      }
+
+      button:active {
+        transform: scale(0.98);
+      }
+
+      /* 애니메이션 영역 */
+      .stage {
+        perspective: 600px;
+        width: 200px;
+        height: 200px;
+        margin: 0 auto 20px auto;
+        position: relative;
+      }
+
+      /* 이모지 보물상자 스타일 및 애니메이션 */
+      .chest {
+        font-size: 80px;
+        line-height: 200px;
+        text-align: center;
+        cursor: default;
+        user-select: none;
+        transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      /* 정답 시 흔들린 후 커지는 효과 */
+      .chest.open {
+        animation: openChest 1.5s forwards;
+      }
+
+      /* 보물 빛 효과 */
+      .glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        width: 150px;
+        height: 150px;
+        background: radial-gradient(
+          circle,
+          rgba(255, 182, 193, 0.8) 0%,
+          rgba(255, 105, 180, 0) 70%
+        );
+        border-radius: 50%;
+        z-index: -1;
+        opacity: 0;
+        transition: all 1s ease-in-out;
+        pointer-events: none;
+      }
+
+      .chest.open + .glow {
+        transform: translate(-50%, -50%) scale(1.8);
+        opacity: 1;
+        animation: pulseGlow 2s infinite ease-in-out 1s;
+      }
+
+      /* 오답 시 흔들림 효과 */
+      .shake {
+        animation: shake 0.4s ease-in-out;
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        20%,
+        60% {
+          transform: translateX(-10px);
+        }
+        40%,
+        80% {
+          transform: translateX(10px);
+        }
+      }
+
+      @keyframes openChest {
+        0% {
+          transform: scale(1);
+        }
+        20% {
+          transform: scale(0.8) rotate(-5deg);
+        }
+        50% {
+          transform: scale(1.2) rotate(5deg);
+        }
+        100% {
+          transform: scale(1.1);
+        }
+      }
+
+      @keyframes pulseGlow {
+        0%,
+        100% {
+          opacity: 0.6;
+          transform: translate(-50%, -50%) scale(1.6);
+        }
+        50% {
+          opacity: 0.9;
+          transform: translate(-50%, -50%) scale(2);
+        }
+      }
+
+      .message {
+        min-height: 24px;
+        font-weight: bold;
+        font-size: 14px;
+        color: #f87171;
+        line-height: 1.5;
+      }
+
+      .message.success {
+        color: #f472b6;
+        font-size: 17px;
+        animation: fadeInUp 0.5s forwards;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="stage">
+        <div id="chest" class="chest">📦</div>
+        <div class="glow"></div>
+      </div>
+
+      <h1 id="title">비밀번호를 입력하세요</h1>
+
+      <div class="input-group" id="inputContainer">
+        <input
+          type="password"
+          id="passwordInput"
+          placeholder="PASSWORD"
+          autocomplete="off"
+        />
+        <br />
+        <button onclick="checkPassword()">열기</button>
+      </div>
+
+      <div id="message" class="message"></div>
+    </div>
+
+    <script>
+      // 엔터키 입력 시 작동
+      document
+        .getElementById("passwordInput")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            checkPassword();
+          }
+        });
+
+      function checkPassword() {
+        const input = document.getElementById("passwordInput").value;
+        const chest = document.getElementById("chest");
+        const message = document.getElementById("message");
+        const title = document.getElementById("title");
+        const inputContainer = document.getElementById("inputContainer");
+
+        // 기존 클래스 초기화
+        chest.classList.remove("shake", "open");
+        message.textContent = "";
+        message.className = "message";
+
+        // 입력값 공백 제거 및 대문자 변환 후 비교
+        if (input.trim().toUpperCase() === "LOVE WINS ALL") {
+          // 패스워드 일치 시
+          chest.classList.add("open");
+
+          // 0.5초 뒤 보물상자 이모지 변경
+          setTimeout(() => {
+            chest.textContent = "💖✨";
+          }, 500);
+
+          // UI 및 메시지 변경
+          title.textContent = "보물을 찾았습니다!";
+          message.textContent =
+            "당신은 사랑 받기 위해 태어난 사람. 누구보다 소중한 보물입니다.";
+          message.classList.add("success");
+          inputContainer.style.display = "none"; // 입력창 숨기기
+        } else {
+          // 패스워드 불일치 시
+          chest.classList.add("shake");
+          message.textContent = "패스워드가 일치하지 않습니다.";
+
+          // 애니메이션 끝난 후 shake 클래스 제거
+          setTimeout(() => {
+            chest.classList.remove("shake");
+          }, 400);
+        }
+      }
+    </script>
+  </body>
+</html>
